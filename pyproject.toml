@@ -14,6 +14,7 @@ pytorch-lightning-bolts = "^0.3.0"
 black = "^20.8b1"
 isort = "^5.7.0"
 pydocstyle = "^5.1.1"
+pre-commit = "^2.10.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
