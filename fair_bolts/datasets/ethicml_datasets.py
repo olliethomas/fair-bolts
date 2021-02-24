@@ -1,4 +1,5 @@
 """Datasets from EthicML."""
+from collections import namedtuple
 from itertools import groupby
 from typing import Iterator, List, Tuple
 
@@ -7,6 +8,8 @@ import torch
 from ethicml import DataTuple
 from ethicml.implementations.pytorch_common import _get_info
 from torch import Tensor
+
+Batch = namedtuple("Batch", ["x", "s", "y"])
 
 
 def group_features(disc_feats: List[str]) -> Iterator[Tuple[str, Iterator[str]]]:
@@ -100,4 +103,4 @@ class DataTupleDataset(DataTupleDatasetBase):
         super().__init__(dataset, disc_features, cont_features)
 
     def __getitem__(self, index: int) -> Tuple[Tensor, Tensor, Tensor]:
-        return (self._x(index), self._s(index), self._y(index))
+        return Batch(x=self._x(index), s=self._s(index), y=self._y(index))
