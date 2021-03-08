@@ -86,12 +86,12 @@ class TabularDataModule(LightningDataModule):
 
     @implements(LightningDataModule)
     def train_dataloader(self, shuffle: bool = False, drop_last: bool = False) -> DataLoader:
-        return self.make_dataloader(self.dataset, shuffle=True)
+        return self.make_dataloader(self.train_data, shuffle=True)
 
     @implements(LightningDataModule)
     def val_dataloader(self, shuffle: bool = False, drop_last: bool = False) -> DataLoader:
-        return self.make_dataloader(self.dataset)
+        return self.make_dataloader(self.val_data)
 
     @implements(LightningDataModule)
     def test_dataloader(self, shuffle: bool = False, drop_last: bool = False) -> DataLoader:
-        return self.make_dataloader(self.dataset)
+        return self.make_dataloader(self.test_data)
