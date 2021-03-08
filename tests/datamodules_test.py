@@ -3,6 +3,7 @@ import pytest
 import torch
 
 from fair_bolts.datamodules.adult_datamodule import AdultDataModule
+from fair_bolts.datamodules.compas_datamodule import CompasDataModule
 
 
 def _create_dm(dm_cls, val_split=0.2):
@@ -12,7 +13,7 @@ def _create_dm(dm_cls, val_split=0.2):
     return dm
 
 
-@pytest.mark.parametrize("dm_cls", [AdultDataModule])
+@pytest.mark.parametrize("dm_cls", [AdultDataModule, CompasDataModule])
 def test_data_modules(dm_cls):
     """Test the datamodules."""
     dm = _create_dm(dm_cls)
