@@ -14,7 +14,7 @@ from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
 
 from fair_bolts.datamodules.vision_datamodule import BaseDm
-from fair_bolts.datasets.ethicml_datasets import Batch
+from fair_bolts.datasets.ethicml_datasets import DataBatch
 
 
 class CmnistDataModule(BaseDm):
@@ -203,7 +203,7 @@ class LdAugmentedDataset(Dataset):
 
         return x
 
-    def _subroutine(self, data: Tuple[Tensor, Tensor]) -> Batch:
+    def _subroutine(self, data: Tuple[Tensor, Tensor]) -> DataBatch:
 
         x, y = data
         s = y % self.num_colours
@@ -224,4 +224,4 @@ class LdAugmentedDataset(Dataset):
         x = x.squeeze(0)
         s = s.squeeze()  # type: ignore[attr-defined]
 
-        return Batch(x=x, s=s, y=y)
+        return DataBatch(x=x, s=s, y=y)

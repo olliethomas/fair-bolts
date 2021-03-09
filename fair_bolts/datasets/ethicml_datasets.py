@@ -9,7 +9,7 @@ from ethicml import DataTuple
 from ethicml.implementations.pytorch_common import _get_info
 from torch import Tensor
 
-Batch = namedtuple("Batch", ["x", "s", "y"])
+DataBatch = namedtuple("DataBatch", ["x", "s", "y"])
 
 
 def group_features(disc_feats: List[str]) -> Iterator[Tuple[str, Iterator[str]]]:
@@ -42,18 +42,14 @@ def grouped_features_indexes(disc_feats: List[str]) -> List[slice]:
 class DataTupleDatasetBase:
     """Wrapper for EthicML datasets."""
 
-    def __init__(
-        self, dataset: DataTuple, disc_features: List[str], cont_features: List[str]
-    ):
+    def __init__(self, dataset: DataTuple, disc_features: List[str], cont_features: List[str]):
         """Create DataTupleDataset."""
         disc_features = [feat for feat in disc_features if feat in dataset.x.columns]
         self.disc_features = disc_features
 
         cont_features = [feat for feat in cont_features if feat in dataset.x.columns]
         self.cont_features = cont_features
-        self.feature_groups = dict(
-            discrete=grouped_features_indexes(self.disc_features)
-        )
+        self.feature_groups = dict(discrete=grouped_features_indexes(self.disc_features))
 
         self.x_disc = dataset.x[self.disc_features].to_numpy(dtype=np.float32)
         self.x_cont = dataset.x[self.cont_features].to_numpy(dtype=np.float32)
@@ -97,10 +93,8 @@ class DataTupleDatasetBase:
 class DataTupleDataset(DataTupleDatasetBase):
     """Wrapper for EthicML datasets."""
 
-    def __init__(
-        self, dataset: DataTuple, disc_features: List[str], cont_features: List[str]
-    ):
+    def __init__(self, dataset: DataTuple, disc_features: List[str], cont_features: List[str]):
         super().__init__(dataset, disc_features, cont_features)
 
     def __getitem__(self, index: int) -> Tuple[Tensor, Tensor, Tensor]:
-        return Batch(x=self._x(index), s=self._s(index), y=self._y(index))
+        return DataBatch(x=self._x(index), s=self._s(index), y=self._y(index))

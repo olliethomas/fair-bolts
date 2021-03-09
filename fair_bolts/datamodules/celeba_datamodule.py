@@ -10,7 +10,7 @@ from torch.utils.data.dataset import T_co, random_split
 from torchvision import transforms as TF
 
 from fair_bolts.datamodules.vision_datamodule import BaseDm
-from fair_bolts.datasets.ethicml_datasets import Batch
+from fair_bolts.datasets.ethicml_datasets import DataBatch
 
 
 class TiWrapper(Dataset):
@@ -21,7 +21,7 @@ class TiWrapper(Dataset):
 
     def __getitem__(self, index) -> T_co:
         x, s, y = self.ti[index]
-        return Batch(x=x, s=s, y=y)
+        return DataBatch(x=x, s=s, y=y)
 
     def __len__(self):
         return len(self.ti)
