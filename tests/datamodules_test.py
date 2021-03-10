@@ -24,3 +24,5 @@ def test_data_modules(dm_cls):
     loader = dm.train_dataloader()
     batch = next(iter(loader))
     assert batch.x.size() == torch.Size([2, *dm.size()])
+    assert dm.num_classes
+    assert dm.num_sens

@@ -35,6 +35,7 @@ class CmnistDataModule(BaseDm):
     ):
         self.num_classes = max(label_map.values()) + 1 if label_map is not None else 10
         self.num_colours = num_colours
+        self.num_sens = self.num_colours
         y_dim = 1 if self.num_classes == 2 else self.num_classes
         s_dim = 1 if self.num_colours == 2 else self.num_colours
         super().__init__(

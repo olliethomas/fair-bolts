@@ -14,3 +14,5 @@ class AdultDataModule(TabularDataModule):
     ):
         super().__init__(val_split=val_split, num_workers=num_workers, batch_size=batch_size)
         self.em_dataset = em.adult(split="Sex", binarize_nationality=True)
+        self.num_classes = len(self.em_dataset.class_labels)
+        self.num_sens = 2

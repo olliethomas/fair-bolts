@@ -40,6 +40,8 @@ class CelebaDataModule(BaseDm):
     ):
         super().__init__(data_dir, batch_size, num_workers, val_split, shrink_pcnt, 1, 1)
         self.dims = (3, 64, 64)
+        self.num_classes = 2
+        self.num_sens = 2
 
     @implements(LightningDataModule)
     def prepare_data(self, *args, **kwargs):

@@ -14,3 +14,5 @@ class CompasDataModule(TabularDataModule):
     ):
         super().__init__(val_split=val_split, num_workers=num_workers, batch_size=batch_size)
         self.em_dataset = em.compas(split="Sex")
+        self.num_classes = 2
+        self.num_sens = 2
