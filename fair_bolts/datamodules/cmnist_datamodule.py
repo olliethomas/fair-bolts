@@ -7,10 +7,10 @@ import ethicml.vision as emvi
 import torch
 from ethicml import implements
 from ethicml.vision import LdColorizer, LdTransformation
+from pal_bolts.datasets.mnist_dataset import MNIST
 from pytorch_lightning import LightningDataModule
 from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, RandomSampler, Subset, random_split
-from torchvision.datasets import MNIST
 from torchvision.transforms import transforms
 
 from fair_bolts.datamodules.vision_datamodule import BaseDm
