@@ -1,0 +1,21 @@
+"""Accuracy that accepts sens label."""
+import torch
+from pytorch_lightning.metrics import Accuracy
+
+
+class FbAccuracy(Accuracy):
+    """Accuracy where sens can be passed."""
+
+    @property
+    def __name__(self):
+        return f"Accuracy"
+
+    def update(self, preds: torch.Tensor, sens: torch.Tensor, target: torch.Tensor):
+        """Update state with predictions and targets.
+
+        Args:
+            preds: Predictions from model
+            sens: Ground truth sensitive labels
+            target: Ground truth values
+        """
+        super().update(preds, target)
