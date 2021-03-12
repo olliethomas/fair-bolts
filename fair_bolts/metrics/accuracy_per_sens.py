@@ -23,4 +23,6 @@ class AccuracyPerSens(Accuracy):
             sens: Ground truth sensitive labels
             target: Ground truth values
         """
-        super().update(preds[sens == self.sens], target[sens == self.sens])
+        mask = sens == self.sens
+        if mask.sum() > 0:
+            super().update(preds[mask], target[mask])
