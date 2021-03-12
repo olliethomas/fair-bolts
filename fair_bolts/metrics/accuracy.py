@@ -1,5 +1,7 @@
 """Accuracy that accepts sens label."""
+import torch
 from torchmetrics.classification.accuracy import Accuracy
+from torchmetrics.functional.classification.accuracy import _accuracy_update
 
 
 class FbAccuracy(Accuracy):
