@@ -15,7 +15,7 @@ class AccuracyPerSens(Accuracy):
 
     @property
     def __name__(self):
-        return f"Accuracy_Sens_{self.sens}"
+        return f"Accuracy_s{self.sens}"
 
     def update(self, preds: torch.Tensor, sens: torch.Tensor, target: torch.Tensor):
         """Update state with predictions and targets.
