@@ -122,8 +122,8 @@ class AccuracyPerSens(Metric):
         """
         for _s in range(self.num_sens):
             correct, total = _accuracy_update(
-                preds,
-                target,
+                preds[sens == _s],
+                target[sens == _s],
                 threshold=self.threshold,
                 top_k=self.top_k,
                 subset_accuracy=self.subset_accuracy,
