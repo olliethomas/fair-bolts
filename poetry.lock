@@ -481,15 +481,15 @@ optional = false
 python-versions = "^3.7"
 
 [package.dependencies]
-lightning-bolts = "^0.3.1"
-torch = "1.8"
-torchvision = "0.9"
+lightning-bolts = "*0.3.1"
+torch = "*1.8"
+torchvision = "*0.9"
 
 [package.source]
 type = "git"
 url = "https://github.com/predictive-analytics-lab/pal-bolts.git"
 reference = "test-metric"
-resolved_reference = "307561f6b5466e9ef069ee4c3aff5e4743d715fa"
+resolved_reference = "f740ba1567e62ca1bb6a219e66f1c352cfcf5188"
 
 [[package]]
 name = "pandas"
@@ -1058,7 +1058,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "2cdd9b9b647b4521363294ce6ec215cee52a5eb976edb85f342d1c25c80fadbe"
+content-hash = "1f07223cb1b9ea10e012edec32c76b20039b7b69e322bccd5b5a28d5020cd3dd"
 
 [metadata.files]
 absl-py = [
