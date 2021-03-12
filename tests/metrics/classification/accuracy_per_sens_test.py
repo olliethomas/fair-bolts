@@ -1,6 +1,7 @@
 """Accuracy tests."""
 from collections import namedtuple
 
+import pytest
 import torch
 
 from fair_bolts.metrics.accuracy_per_sens import AccuracyPerSens
@@ -86,8 +87,9 @@ _input_multidim_multiclass = Input(
 )
 
 
-def test_acc():
+@pytest.mark.parametrize('sens', [0, 1, 2])
+def test_acc(sens: int):
     """Test the Accuracy per sens metric runs."""
-    acc = AccuracyPerSens(torch.unique(_input_binary.sens).shape[0])
+    acc = AccuracyPerSens(sens)
     acc(_input_binary.preds, _input_binary.sens, _input_binary.target)
     acc.compute()
