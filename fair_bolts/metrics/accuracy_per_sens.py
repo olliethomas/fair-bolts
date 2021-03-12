@@ -3,7 +3,8 @@ from typing import Any, Callable, Dict, Optional
 
 import torch
 from pytorch_lightning.metrics import Metric
-from pytorch_lightning.metrics.classification.helpers import _input_format_classification
+
+from fair_bolts.metrics.classfication import _input_format_classification
 
 
 class AccuracyPerSens(Metric):
