@@ -1,7 +1,7 @@
 """Accuracy that accepts sens label."""
 import torch
-from torchmetrics.classification.accuracy import Accuracy
-from torchmetrics.functional.classification.accuracy import _accuracy_update
+from pytorch_lightning.metrics import Accuracy
+from pytorch_lightning.metrics.utils import _input_format_classification
 
 
 class FbAccuracy(Accuracy):
@@ -10,21 +10,13 @@ class FbAccuracy(Accuracy):
     def update(self, preds: torch.Tensor, sens: torch.Tensor, target: torch.Tensor):
         """Update state with predictions and targets.
 
-        See :ref:`references/modules:input types` for more information
-        on input types.
-
         Args:
-            preds: Predictions from model (probabilities, or labels)
+            preds: Predictions from model
             sens: Ground truth sensitive labels
-            target: Ground truth labels
+            target: Ground truth values
         """
-        correct, total = _accuracy_update(
-            preds,
-            target,
-            threshold=self.threshold,
-            top_k=self.top_k,
-            subset_accuracy=self.subset_accuracy,
-        )
+        preds, target = _input_format_classification(preds, target, self.threshold)
+        assert preds.shape == target.shape
 
-        self.correct = correct
-        self.total = total
+        self.correct += torch.sum(preds == target)
+        self.total += target.numel()
