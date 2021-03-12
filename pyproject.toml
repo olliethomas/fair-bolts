@@ -8,7 +8,7 @@ license = "Apache-2.0"
 [tool.poetry.dependencies]
 python = "^3.7"
 pytorch-lightning-bolts = "*0.3.0"
-pal-bolts = {git="https://github.com/predictive-analytics-lab/pal-bolts.git", branch="test-metric"}
+pal-bolts = {git="https://github.com/predictive-analytics-lab/pal-bolts.git", branch="main"}
 torchvision = "*0.9"
 EthicML = "*0.2.0"
 torch = "*1.8"
