@@ -93,3 +93,4 @@ def test_acc(sens: int):
     acc = AccuracyPerSens(sens)
     acc(_input_binary.preds, _input_binary.sens, _input_binary.target)
     acc.compute()
+    print(getattr(acc, "__name__", acc.__class__.__name__).lower())

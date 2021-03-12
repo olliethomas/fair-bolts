@@ -13,6 +13,10 @@ class AccuracyPerSens(Accuracy):
         super().__init__(*args, **kwargs)
         self.sens = sens
 
+    @property
+    def __name__(self):
+        return f"Accuracy_Sens_{self.sens}"
+
     def update(self, preds: torch.Tensor, sens: torch.Tensor, target: torch.Tensor):
         """Update state with predictions and targets.
 
