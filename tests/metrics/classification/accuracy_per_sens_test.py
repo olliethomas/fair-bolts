@@ -4,8 +4,13 @@ from collections import namedtuple
 import torch
 
 from fair_bolts.metrics.accuracy_per_sens import AccuracyPerSens
-from tests.helpers.testers import BATCH_SIZE, EXTRA_DIM, NUM_BATCHES, NUM_CLASSES
 
+NUM_PROCESSES = 2
+NUM_BATCHES = 10
+BATCH_SIZE = 32
+NUM_CLASSES = 5
+EXTRA_DIM = 3
+THRESHOLD = 0.5
 Input = namedtuple('Input', ["preds", "sens", "target"])
 
 _input_binary_prob = Input(
