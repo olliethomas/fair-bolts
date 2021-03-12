@@ -1,5 +1,5 @@
 """Accuracy per sensitive group."""
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
 
 import torch
 from pytorch_lightning.metrics import Metric
@@ -105,12 +105,11 @@ class AccuracyPerSens(Metric):
             setattr(self, f"correct_{_s}", self.__getattribute__(f"correct_{_s}") + correct)
             setattr(self, f"total_{_s}", self.__getattribute__(f"total_{_s}") + total)
 
-    def compute(self) -> Dict[str, torch.Tensor]:
+    def compute(self) -> torch.Tensor:
         """Computes accuracy based on inputs passed in to ``update`` previously."""
-        return {
-            f"sens group {_s}": (
-                self.__getattribute__(f"correct_{_s}").float()
-                / self.__getattribute__(f"total_{_s}")
-            )
+        vals = [
+            self.__getattribute__(f"correct_{_s}").float() / self.__getattribute__(f"total_{_s}")
             for _s in range(self.num_sens)
-        }
+        ]
+        names = [f"sens group {_s}" for _s in range(self.num_sens)]
+        return torch.tensor(*vals, names=tuple(names))

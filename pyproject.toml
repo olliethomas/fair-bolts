@@ -9,8 +9,9 @@ license = "Apache-2.0"
 python = "^3.7"
 pytorch-lightning-bolts = "^0.3.0"
 pal-bolts = {git="https://github.com/predictive-analytics-lab/pal-bolts.git", branch="test-metric"}
-torchvision = "^0.8.0"
+torchvision = "^0.9"
 EthicML = "^0.2.0"
+torch = "^1.8"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
