@@ -3,8 +3,6 @@
 import torch
 from pytorch_lightning.metrics import Accuracy
 
-from fair_bolts.metrics.classfication import _input_format_classification
-
 
 class AccuracyPerSens(Accuracy):
     """Accuracy Metric."""
@@ -20,16 +18,9 @@ class AccuracyPerSens(Accuracy):
     def update(self, preds: torch.Tensor, sens: torch.Tensor, target: torch.Tensor):
         """Update state with predictions and targets.
 
-        See :ref:`references/modules:input types` for more information
-        on input types.
-
         Args:
-            preds: Predictions from model (probabilities, or labels)
+            preds: Predictions from model
             sens: Ground truth sensitive labels
-            target: Ground truth labels
+            target: Ground truth values
         """
-        preds, target = _input_format_classification(preds, target, self.threshold)
-        assert preds.shape == target.shape
-
-        self.correct += torch.sum(preds[sens == self.sens] == target[sens == self.sens])
-        self.total += target.numel()
+        super().update(preds[sens == self.sens], target[sens == self.sens])
