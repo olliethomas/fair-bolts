@@ -1,9 +1,11 @@
 """This is where the inevitable common DataModule will live."""
 from typing import List, Optional, Union
 
+import ethicml as em
 import torch
 from ethicml import implements
 from pytorch_lightning import LightningDataModule
+from sklearn.preprocessing import MinMaxScaler
 from torch.utils.data import DataLoader, random_split
 
 from fair_bolts.datasets.ethicml_datasets import DataTupleDataset
@@ -54,6 +56,7 @@ class TabularDataModule(LightningDataModule):
     @implements(LightningDataModule)
     def setup(self, stage: Optional[str] = None) -> None:
         self.datatuple = self.em_dataset.load(ordered=True)
+        self.datatuple, _ = em.scale_continuous(self.em_dataset, self.datatuple, MinMaxScaler())
         self.dataset = DataTupleDataset(
             self.datatuple,
             disc_features=self.em_dataset.discrete_features,
