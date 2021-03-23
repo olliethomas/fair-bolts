@@ -1,101 +1,113 @@
 """This is where the inevitable common DataModule will live."""
-from typing import List, Optional, Union
+from __future__ import annotations
+
+from abc import abstractmethod
 
 import ethicml as em
-import torch
 from ethicml import implements
+from ethicml.preprocessing.scaling import ScalerType
 from pytorch_lightning import LightningDataModule
-from sklearn.preprocessing import MinMaxScaler
-from torch.utils.data import DataLoader, Dataset, random_split
+from sklearn.preprocessing import StandardScaler
+from torch.utils.data import Dataset
 
+from fair_bolts.datamodules.base_datamodule import BaseDataModule
 from fair_bolts.datasets.ethicml_datasets import DataTupleDataset
 
 
-class TabularDataModule(LightningDataModule):
+class TabularDataModule(BaseDataModule):
     """COMPAS Dataset."""
 
     def __init__(
         self,
-        val_split: Union[float, int] = 0.2,
+        val_split: float | int = 0.2,
+        test_split: float | int = 0.2,
         num_workers: int = 0,
         batch_size: int = 32,
+        seed: int = 0,
+        scaler: ScalerType | None = None,
     ):
         """COMPAS Dataset Module.
 
         Args:
             val_split: Percent (float) or number (int) of samples to use for the validation split
+            test_split: Percent (float) or number (int) of samples to use for the test split
             num_workers: How many workers to use for loading data
             batch_size: How many samples per batch to load
+            seed: RNG Seed
+            scaler: SKLearn style data scaler. Fit to train, applied to val and test.
         """
-        super().__init__()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.seed = 0
-        self.val_split = val_split
+        super().__init__(
+            num_workers=num_workers,
+            val_split=val_split,
+            test_split=test_split,
+            seed=seed,
+            batch_size=batch_size,
+        )
+        self.scaler = scaler if scaler is not None else StandardScaler()
 
-    def _get_splits(self, train_len: int) -> List[int]:
-        """Computes split lengths for train and validation set."""
-        if isinstance(self.val_split, int):
-            train_len -= self.val_split
-            splits = [train_len, self.val_split]
-        elif isinstance(self.val_split, float):
-            val_len = int(self.val_split * train_len)
-            train_len -= val_len
-            splits = [train_len, val_len]
-        else:
-            raise ValueError(f"Unsupported type {type(self.val_split)}")
-
-        return splits
+    @property
+    @abstractmethod
+    def em_dataset(self) -> em.Dataset:
+        ...
 
     @implements(LightningDataModule)
-    def prepare_data(self):
+    def prepare_data(self) -> None:
         self.dims = (
             len(self.em_dataset.discrete_features) + len(self.em_dataset.continuous_features),
         )
 
     @implements(LightningDataModule)
-    def setup(self, stage: Optional[str] = None) -> None:
+    def setup(self, stage: str | None = None) -> None:
         self.datatuple = self.em_dataset.load(ordered=True)
-        self.datatuple, _ = em.scale_continuous(self.em_dataset, self.datatuple, MinMaxScaler())
-        self.dataset = DataTupleDataset(
-            self.datatuple,
+
+        data_len = int(self.datatuple.x.shape[0])
+        num_train_val, num_test = self._get_splits(data_len, self.test_split)
+        train_val, test = em.train_test_split(
+            data=self.datatuple,
+            train_percentage=(1 - (num_test / data_len)),
+            random_seed=self.seed,
+        )
+        num_train, num_val = self._get_splits(num_train_val, self.val_split)
+        train, val = em.train_test_split(
+            data=train_val,
+            train_percentage=(1 - (num_val / num_train_val)),
+            random_seed=self.seed,
+        )
+
+        train, self.scaler = em.scale_continuous(
+            self.em_dataset, datatuple=train, scaler=self.scaler
+        )
+        val, _ = em.scale_continuous(self.em_dataset, datatuple=val, scaler=self.scaler, fit=False)
+        test, _ = em.scale_continuous(
+            self.em_dataset, datatuple=test, scaler=self.scaler, fit=False
+        )
+
+        self._train_data = DataTupleDataset(
+            train,
             disc_features=self.em_dataset.discrete_features,
             cont_features=self.em_dataset.continuous_features,
         )
 
-        num_train, num_val = self._get_splits(int(self.datatuple.x.shape[0] * 0.8))
-        g_cpu = torch.Generator()
-        g_cpu = g_cpu.manual_seed(self.seed)
-
-        self.train_data, self.val_data, self.test_data = random_split(
-            self.dataset,
-            lengths=(
-                num_train,
-                num_val,
-                int(self.datatuple.x.shape[0]) - num_train - num_val,
-            ),
-            generator=g_cpu,
+        self._val_data = DataTupleDataset(
+            val,
+            disc_features=self.em_dataset.discrete_features,
+            cont_features=self.em_dataset.continuous_features,
         )
 
-    def make_dataloader(self, ds: Dataset, shuffle: bool = False, drop_last: bool = False):
-        """Make DataLoader."""
-        return DataLoader(
-            ds,
-            batch_size=self.batch_size,
-            shuffle=shuffle,
-            num_workers=self.num_workers,
-            pin_memory=True,
-            drop_last=drop_last,
+        self._test_data = DataTupleDataset(
+            test,
+            disc_features=self.em_dataset.discrete_features,
+            cont_features=self.em_dataset.continuous_features,
         )
 
-    @implements(LightningDataModule)
-    def train_dataloader(self, shuffle: bool = False, drop_last: bool = True) -> DataLoader:
-        return self.make_dataloader(self.train_data, shuffle=True, drop_last=drop_last)
+    @property
+    def train_data(self) -> Dataset:
+        return self._train_data
 
-    @implements(LightningDataModule)
-    def val_dataloader(self, shuffle: bool = False, drop_last: bool = False) -> DataLoader:
-        return self.make_dataloader(self.val_data)
+    @property
+    def val_data(self) -> Dataset:
+        return self._val_data
 
-    @implements(LightningDataModule)
-    def test_dataloader(self, shuffle: bool = False, drop_last: bool = False) -> DataLoader:
-        return self.make_dataloader(self.test_data)
+    @property
+    def test_data(self) -> Dataset:
+        return self._test_data

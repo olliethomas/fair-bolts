@@ -7,10 +7,10 @@ class FbAccuracy(Accuracy):
     """Accuracy where sens can be passed."""
 
     @property
-    def __name__(self):
+    def __name__(self) -> str:
         return f"Accuracy"
 
-    def update(self, preds: torch.Tensor, sens: torch.Tensor, target: torch.Tensor):
+    def update(self, preds: torch.Tensor, sens: torch.Tensor, target: torch.Tensor) -> None:
         """Update state with predictions and targets.
 
         Args:

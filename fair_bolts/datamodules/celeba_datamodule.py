@@ -1,15 +1,16 @@
 """CelebA DataModule."""
-from typing import Optional
+from typing import Any, Optional
 
 import ethicml as em
 import ethicml.vision as emvi
+import torch
 from ethicml import implements
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import T_co, random_split
 from torchvision import transforms as TF
 
-from fair_bolts.datamodules.vision_datamodule import BaseDm
+from fair_bolts.datamodules.vision_datamodule import VisionBaseDataModule
 from fair_bolts.datasets.ethicml_datasets import DataBatch
 
 
@@ -19,15 +20,15 @@ class TiWrapper(Dataset):
     def __init__(self, ti: emvi.TorchImageDataset):
         self.ti = ti
 
-    def __getitem__(self, index) -> T_co:
+    def __getitem__(self, index: int) -> T_co:
         x, s, y = self.ti[index]
         return DataBatch(x=x, s=s, y=y)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.ti)
 
 
-class CelebaDataModule(BaseDm):
+class CelebaDataModule(VisionBaseDataModule):
     """CelebA Dataset."""
 
     def __init__(
@@ -35,16 +36,26 @@ class CelebaDataModule(BaseDm):
         data_dir: Optional[str] = None,
         batch_size: int = 32,
         num_workers: int = 0,
-        shrink_pcnt: float = 1.0,
         val_split: float = 0.2,
+        test_split: float = 0.2,
+        seed: int = 0,
     ):
-        super().__init__(data_dir, batch_size, num_workers, val_split, shrink_pcnt, 1, 1)
+        super().__init__(
+            data_dir=data_dir,
+            batch_size=batch_size,
+            num_workers=num_workers,
+            val_split=val_split,
+            test_split=test_split,
+            s_dim=1,
+            y_dim=1,
+            seed=seed,
+        )
         self.dims = (3, 64, 64)
         self.num_classes = 2
         self.num_sens = 2
 
     @implements(LightningDataModule)
-    def prepare_data(self, *args, **kwargs):
+    def prepare_data(self, *args: Any, **kwargs: Any) -> None:
         _, _ = em.celeba(
             download_dir=self.data_dir,
             label="Smiling",
@@ -75,18 +86,17 @@ class CelebaDataModule(BaseDm):
             )
         )
 
-        data_len = int(len(all_data) * self.shrink_pcnt)
+        num_train_val, num_test = self._get_splits(int(len(all_data)), self.test_split)
+        num_train, num_val = self._get_splits(num_train_val, self.val_split)
 
-        test_len = int(data_len * 0.2)
-        train_len = data_len - test_len
-        val_len = int(self.val_pcnt * train_len)
-        train_len -= val_len
-
-        train_data, val_data, test_data, _ = random_split(
+        g_cpu = torch.Generator()
+        g_cpu = g_cpu.manual_seed(self.seed)
+        self._train_data, self._val_data, self._test_data = random_split(
             all_data,
-            lengths=(train_len, val_len, test_len, len(all_data) - train_len - val_len - test_len),
+            lengths=(
+                num_train,
+                num_val,
+                len(all_data) - num_train - num_val,
+            ),
+            generator=g_cpu,
         )
-
-        self.train_data = train_data
-        self.val_data = val_data
-        self.test_data = test_data

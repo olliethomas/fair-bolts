@@ -13,11 +13,11 @@ from torch import Tensor
 from torch.utils.data import DataLoader, Dataset, RandomSampler, Subset, random_split
 from torchvision.transforms import transforms
 
-from fair_bolts.datamodules.vision_datamodule import BaseDm
+from fair_bolts.datamodules.vision_datamodule import VisionBaseDataModule
 from fair_bolts.datasets.ethicml_datasets import DataBatch
 
 
-class CmnistDataModule(BaseDm):
+class CmnistDataModule(VisionBaseDataModule):
     """Lightning Data Module for CMNIST."""
 
     def __init__(
@@ -30,8 +30,9 @@ class CmnistDataModule(BaseDm):
         num_colours: int = 10,
         scale: float = 0.2,
         num_workers: int = 0,
-        shrink_pcnt: float = 1.0,
         val_split: float = 0.2,
+        test_split: float = 0.2,
+        seed: int = 0,
     ):
         self.num_classes = max(label_map.values()) + 1 if label_map is not None else 10
         self.num_colours = num_colours
@@ -43,15 +44,16 @@ class CmnistDataModule(BaseDm):
             batch_size=batch_size,
             num_workers=num_workers,
             val_split=val_split,
-            shrink_pcnt=shrink_pcnt,
+            test_split=test_split,
             y_dim=y_dim,
             s_dim=s_dim,
+            seed=seed,
         )
         self.dims = (3, 32, 32)
 
         self.correlation = correlation
         self.scale = scale
-        self.label_map = label_map if label_map is not None else {i: i for i in range(10)}
+        self.label_map = label_map if label_map is not None else {f"{i}": i for i in range(10)}
         self.colours = colours
 
     def _filter(self, dataset: MNIST) -> None:
@@ -78,16 +80,16 @@ class CmnistDataModule(BaseDm):
         self._filter(train_data)
         self._filter(test_data)
 
-        train_len = int(len(train_data) * self.shrink_pcnt)
+        train_len = int(len(train_data))
+        num_train, _ = self._get_splits(train_len, self.val_split)
 
-        val_len = round(self.val_pcnt * train_len)
-        train_len -= val_len
-        val_data, train_data, _ = random_split(
-            train_data, lengths=(val_len, train_len, len(train_data) - train_len - val_len)
+        g_cpu = torch.Generator()
+        g_cpu = g_cpu.manual_seed(self.seed)
+        train_data, val_data = random_split(
+            train_data,
+            lengths=(num_train, train_len - num_train),
+            generator=g_cpu,
         )
-
-        test_len = int(len(test_data) * self.shrink_pcnt)
-        test_data, _ = random_split(test_data, lengths=(test_len, len(test_data) - test_len))
 
         colorizer = LdColorizer(
             scale=self.scale,
@@ -98,15 +100,7 @@ class CmnistDataModule(BaseDm):
             color_indices=self.colours,
         )
 
-        self.val_data = LdAugmentedDataset(
-            val_data,
-            ld_augmentations=colorizer,
-            num_classes=self.num_classes,
-            num_colours=self.num_colours,
-            li_augmentation=True,
-            base_augmentations=base_aug,
-        )
-        self.train_data = LdAugmentedDataset(
+        self._train_data = LdAugmentedDataset(
             train_data,
             ld_augmentations=colorizer,
             num_classes=self.num_classes,
@@ -115,7 +109,15 @@ class CmnistDataModule(BaseDm):
             base_augmentations=base_aug,
             correlation=self.correlation,
         )
-        self.test_data = LdAugmentedDataset(
+        self._val_data = LdAugmentedDataset(
+            val_data,
+            ld_augmentations=colorizer,
+            num_classes=self.num_classes,
+            num_colours=self.num_colours,
+            li_augmentation=True,
+            base_augmentations=base_aug,
+        )
+        self._test_data = LdAugmentedDataset(
             test_data,
             ld_augmentations=colorizer,
             num_classes=self.num_classes,
@@ -189,7 +191,7 @@ class LdAugmentedDataset(Dataset):
     def _validate_data(*args: Union[Tensor, int]) -> Iterator[Tuple[Tensor, Tensor, Tensor]]:
         for arg in args:
             if not isinstance(arg, torch.Tensor):
-                dtype = torch.long if isinstance(arg, int) else torch.float32  # type: ignore[comparison-overlap]
+                dtype = torch.long if isinstance(arg, int) else torch.float32
                 arg = torch.tensor(arg, dtype=dtype)
             if arg.dim() == 0:
                 arg = arg.view(-1)
@@ -216,7 +218,7 @@ class LdAugmentedDataset(Dataset):
         if self.correlation < 1:
             flip_prob = torch.rand(s.shape)  # type: ignore[attr-defined]
             if flip_prob > self.correlation:
-                s = torch.randint_like(s, low=0, high=self.num_colours)  # type: ignore[index]
+                s = torch.randint_like(s, low=0, high=self.num_colours)
 
         x = self._augment(x, s)
 

@@ -88,7 +88,7 @@ _input_multidim_multiclass = Input(
 
 
 @pytest.mark.parametrize('sens', [0, 1, 2])
-def test_acc(sens: int):
+def test_acc(sens: int) -> None:
     """Test the Accuracy per sens metric runs."""
     acc = AccuracyPerSens(sens)
     acc(_input_binary.preds, _input_binary.sens, _input_binary.target)

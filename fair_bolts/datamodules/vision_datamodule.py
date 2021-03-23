@@ -1,47 +1,51 @@
 """Common components for an EthicML vision datamodule."""
+from __future__ import annotations
+
 import os
-from typing import Optional
 
-from ethicml import Dataset, implements
-from pytorch_lightning import LightningDataModule
-from torch.utils.data import DataLoader
+from ethicml import Dataset
+
+from fair_bolts.datamodules.base_datamodule import BaseDataModule
 
 
-class BaseDm(LightningDataModule):
+class VisionBaseDataModule(BaseDataModule):
     """Base DataModule for this project."""
 
-    def __init__(self, data_dir, batch_size, num_workers, val_split, shrink_pcnt, y_dim, s_dim):
-        super().__init__()
+    def __init__(
+        self,
+        data_dir: str | None,
+        batch_size: int,
+        num_workers: int,
+        val_split: float | int,
+        test_split: float | int,
+        y_dim: int,
+        s_dim: int,
+        seed: int,
+    ) -> None:
+        super().__init__(
+            batch_size=batch_size,
+            num_workers=num_workers,
+            val_split=val_split,
+            test_split=test_split,
+            seed=seed,
+        )
         self.data_dir = data_dir if data_dir is not None else os.getcwd()
-        self.batch_size = batch_size
-        self.num_workers = num_workers
-        self.val_pcnt = val_split
-        self.shrink_pcnt = shrink_pcnt
         self.y_dim = y_dim
         self.s_dim = s_dim
+        self.seed = seed
 
-        self.train_data: Optional[Dataset] = None
-        self.test_data: Optional[Dataset] = None
-        self.val_data: Optional[Dataset] = None
+        self._train_data: Dataset | None = None
+        self._test_data: Dataset | None = None
+        self._val_data: Dataset | None = None
 
-    def make_dataloader(self, ds, shuffle=False):
-        """Make DataLoader."""
-        return DataLoader(
-            ds,
-            batch_size=self.batch_size,
-            shuffle=shuffle,
-            num_workers=self.num_workers,
-            pin_memory=True,
-        )
+    @property
+    def train_data(self) -> Dataset:
+        return self._train_data
 
-    @implements(LightningDataModule)
-    def train_dataloader(self, shuffle: bool = False, drop_last: bool = False) -> DataLoader:
-        return self.make_dataloader(self.train_data, shuffle=True)
+    @property
+    def val_data(self) -> Dataset:
+        return self._val_data
 
-    @implements(LightningDataModule)
-    def val_dataloader(self, shuffle: bool = False, drop_last: bool = False) -> DataLoader:
-        return self.make_dataloader(self.val_data)
-
-    @implements(LightningDataModule)
-    def test_dataloader(self, shuffle: bool = False, drop_last: bool = False) -> DataLoader:
-        return self.make_dataloader(self.test_data)
+    @property
+    def test_data(self) -> Dataset:
+        return self._test_data

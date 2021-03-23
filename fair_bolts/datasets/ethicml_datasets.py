@@ -8,6 +8,7 @@ import torch
 from ethicml import DataTuple
 from ethicml.implementations.pytorch_common import _get_info
 from torch import Tensor
+from torch.utils.data import Dataset
 
 DataBatch = namedtuple("DataBatch", ["x", "s", "y"])
 
@@ -39,7 +40,7 @@ def grouped_features_indexes(disc_feats: List[str]) -> List[slice]:
     return feature_slices
 
 
-class DataTupleDatasetBase:
+class DataTupleDatasetBase(Dataset):
     """Wrapper for EthicML datasets."""
 
     def __init__(self, dataset: DataTuple, disc_features: List[str], cont_features: List[str]):
