@@ -1,5 +1,5 @@
 """COMPAS Dataset."""
-from __future__ import annotations
+from typing import Optional, Union
 
 import ethicml as em
 from ethicml.preprocessing.scaling import ScalerType
@@ -12,11 +12,11 @@ class CompasDataModule(TabularDataModule):
 
     def __init__(
         self,
-        val_split: float | int = 0.2,
-        test_split: float | int = 0.2,
+        val_split: Union[float, int] = 0.2,
+        test_split: Union[float, int] = 0.2,
         num_workers: int = 0,
         batch_size: int = 32,
-        scaler: ScalerType | None = None,
+        scaler: Optional[ScalerType] = None,
         seed: int = 0,
     ):
         super().__init__(
