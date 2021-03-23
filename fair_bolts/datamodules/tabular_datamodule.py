@@ -6,7 +6,7 @@ import torch
 from ethicml import implements
 from pytorch_lightning import LightningDataModule
 from sklearn.preprocessing import MinMaxScaler
-from torch.utils.data import DataLoader, random_split
+from torch.utils.data import DataLoader, Dataset, random_split
 
 from fair_bolts.datasets.ethicml_datasets import DataTupleDataset
 
@@ -77,7 +77,7 @@ class TabularDataModule(LightningDataModule):
             generator=g_cpu,
         )
 
-    def make_dataloader(self, ds, shuffle=False):
+    def make_dataloader(self, ds: Dataset, shuffle: bool = False, drop_last: bool = False):
         """Make DataLoader."""
         return DataLoader(
             ds,
@@ -85,11 +85,12 @@ class TabularDataModule(LightningDataModule):
             shuffle=shuffle,
             num_workers=self.num_workers,
             pin_memory=True,
+            drop_last=drop_last,
         )
 
     @implements(LightningDataModule)
-    def train_dataloader(self, shuffle: bool = False, drop_last: bool = False) -> DataLoader:
-        return self.make_dataloader(self.train_data, shuffle=True)
+    def train_dataloader(self, shuffle: bool = False, drop_last: bool = True) -> DataLoader:
+        return self.make_dataloader(self.train_data, shuffle=True, drop_last=drop_last)
 
     @implements(LightningDataModule)
     def val_dataloader(self, shuffle: bool = False, drop_last: bool = False) -> DataLoader:
