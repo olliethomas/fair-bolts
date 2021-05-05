@@ -1,4 +1,5 @@
 """CelebA DataModule."""
+from functools import lru_cache
 from typing import Any, Optional
 
 import ethicml as em
@@ -20,6 +21,7 @@ class TiWrapper(Dataset):
     def __init__(self, ti: emvi.TorchImageDataset):
         self.ti = ti
 
+    @lru_cache(None)
     def __getitem__(self, index: int) -> T_co:
         x, s, y = self.ti[index]
         return DataBatch(x=x, s=s, y=y)
