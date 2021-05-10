@@ -26,5 +26,7 @@ def test_data_modules(dm_cls: Type[LightningDataModule]) -> None:
     loader = dm.train_dataloader()
     batch = next(iter(loader))
     assert batch.x.size() == torch.Size([2, *dm.size()])
+    assert batch.s.size() == torch.Size([2])
+    assert batch.y.size() == torch.Size([2])
     assert dm.num_classes
     assert dm.num_sens
