@@ -226,5 +226,6 @@ class LdAugmentedDataset(Dataset):
             x = x.repeat(1, 3, 1, 1)
         x = x.squeeze(0)
         s = s.squeeze()  # type: ignore[attr-defined]
+        y = y.squeeze()  # type: ignore[attr-defined]
 
         return DataBatch(x=x, s=s, y=y)

@@ -1,6 +1,7 @@
 """Test DataModules."""
 import pytest
 import torch
+import torch.nn.functional as F
 from pytorch_lightning import LightningDataModule
 from typing_extensions import Type
 
@@ -26,5 +27,9 @@ def test_data_modules(dm_cls: Type[LightningDataModule]) -> None:
     loader = dm.train_dataloader()
     batch = next(iter(loader))
     assert batch.x.size() == torch.Size([2, *dm.size()])
+    assert batch.s.size() == torch.Size([2])
+    assert batch.y.size() == torch.Size([2])
+    F.cross_entropy(torch.rand((2, dm.num_sens)), batch.s)
+    F.cross_entropy(torch.rand((2, dm.num_classes)), batch.y)
     assert dm.num_classes
     assert dm.num_sens

@@ -84,11 +84,11 @@ class DataTupleDatasetBase(Dataset):
 
     def _s(self, index: int) -> Tensor:
         s = self.s[index]
-        return torch.from_numpy(s).squeeze()
+        return torch.from_numpy(s).squeeze().long()
 
     def _y(self, index: int) -> Tensor:
         y = self.y[index]
-        return torch.from_numpy(y).squeeze()
+        return torch.from_numpy(y).squeeze().long()
 
 
 class DataTupleDataset(DataTupleDatasetBase):
