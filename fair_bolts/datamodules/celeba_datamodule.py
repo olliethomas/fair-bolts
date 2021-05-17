@@ -38,7 +38,7 @@ class CelebaDataModule(VisionBaseDataModule):
         num_workers: int = 0,
         val_split: float = 0.2,
         test_split: float = 0.2,
-        target: str = "Smiling",
+        y_label: str = "Smiling",
         s_label: str = "Male",
         seed: int = 0,
     ):
@@ -55,14 +55,14 @@ class CelebaDataModule(VisionBaseDataModule):
         self.dims = (3, 64, 64)
         self.num_classes = 2
         self.num_sens = 2
-        self.target = target
+        self.y_label = y_label
         self.s_label = s_label
 
     @implements(LightningDataModule)
     def prepare_data(self, *args: Any, **kwargs: Any) -> None:
         _, _ = em.celeba(
             download_dir=self.data_dir,
-            label=self.target,
+            label=self.y_label,
             sens_attr=self.s_label,
             download=True,
             check_integrity=True,
@@ -72,7 +72,7 @@ class CelebaDataModule(VisionBaseDataModule):
     def setup(self, stage: Optional[str] = None) -> None:
         dataset, base_dir = em.celeba(
             download_dir=self.data_dir,
-            label=self.target,
+            label=self.y_label,
             sens_attr=self.s_label,
             download=False,
             check_integrity=True,
