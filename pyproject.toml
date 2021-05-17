@@ -11,7 +11,7 @@ python = "^3.7"
 lightning-bolts = "^0.3"
 pal-bolts = {git="https://github.com/predictive-analytics-lab/pal-bolts.git", branch="main"}
 torchvision = "^0.9"
-EthicML = "*"
+EthicML = {git="https://github.com/predictive-analytics-lab/EthicML.git", branch="master"}
 torch = "^1.8"
 
 [tool.poetry.dev-dependencies]
