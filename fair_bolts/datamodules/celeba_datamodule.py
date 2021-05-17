@@ -4,7 +4,7 @@ from typing import Any, Optional
 import ethicml as em
 import ethicml.vision as emvi
 import torch
-from ethicml import implements
+from ethicml import CelebAttrs, implements
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import T_co, random_split
@@ -38,6 +38,8 @@ class CelebaDataModule(VisionBaseDataModule):
         num_workers: int = 0,
         val_split: float = 0.2,
         test_split: float = 0.2,
+        target: CelebAttrs = "Smiling",
+        s_label: CelebAttrs = "Male",
         seed: int = 0,
     ):
         super().__init__(
@@ -53,13 +55,15 @@ class CelebaDataModule(VisionBaseDataModule):
         self.dims = (3, 64, 64)
         self.num_classes = 2
         self.num_sens = 2
+        self.target = target
+        self.s_label = s_label
 
     @implements(LightningDataModule)
     def prepare_data(self, *args: Any, **kwargs: Any) -> None:
         _, _ = em.celeba(
             download_dir=self.data_dir,
-            label="Smiling",
-            sens_attr="Male",
+            label=self.target,
+            sens_attr=self.s_label,
             download=True,
             check_integrity=True,
         )
@@ -68,8 +72,8 @@ class CelebaDataModule(VisionBaseDataModule):
     def setup(self, stage: Optional[str] = None) -> None:
         dataset, base_dir = em.celeba(
             download_dir=self.data_dir,
-            label="Smiling",
-            sens_attr="Male",
+            label=self.target,
+            sens_attr=self.s_label,
             download=False,
             check_integrity=True,
         )
