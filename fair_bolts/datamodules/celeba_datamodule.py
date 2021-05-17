@@ -4,7 +4,7 @@ from typing import Any, Optional
 import ethicml as em
 import ethicml.vision as emvi
 import torch
-from ethicml import CelebAttrs, implements
+from ethicml import implements
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import T_co, random_split
@@ -38,8 +38,8 @@ class CelebaDataModule(VisionBaseDataModule):
         num_workers: int = 0,
         val_split: float = 0.2,
         test_split: float = 0.2,
-        target: CelebAttrs = "Smiling",
-        s_label: CelebAttrs = "Male",
+        target: str = "Smiling",
+        s_label: str = "Male",
         seed: int = 0,
     ):
         super().__init__(
