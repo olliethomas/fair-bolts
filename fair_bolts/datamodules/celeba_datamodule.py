@@ -98,7 +98,7 @@ class CelebaDataModule(VisionBaseDataModule):
         )
 
         if self.cache_data:
-            lru_cache(None, all_data.__getitem__)
+            all_data.__getitem__ = lru_cache(None)(all_data.__getitem__)
 
         num_train_val, num_test = self._get_splits(int(len(all_data)), self.test_split)
         num_train, num_val = self._get_splits(num_train_val, self.val_split)

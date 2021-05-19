@@ -42,6 +42,7 @@ def test_cache_param() -> None:
     dm.setup()
     loader = dm.train_dataloader()
     batch = next(iter(loader))
+    assert loader.dataset.dataset.__getitem__.cache_info()
     assert batch.x.size() == torch.Size([32, *dm.size()])
     assert batch.s.size() == torch.Size([32])
     assert batch.y.size() == torch.Size([32])
