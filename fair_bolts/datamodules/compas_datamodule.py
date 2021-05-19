@@ -18,6 +18,7 @@ class CompasDataModule(TabularDataModule):
         batch_size: int = 32,
         scaler: Optional[ScalerType] = None,
         seed: int = 0,
+        persist_workers: bool = False,
     ):
         super().__init__(
             batch_size=batch_size,
@@ -26,6 +27,7 @@ class CompasDataModule(TabularDataModule):
             seed=seed,
             test_split=test_split,
             val_split=val_split,
+            persist_workers=persist_workers,
         )
         self._em_dataset = em.compas(split="Sex")
         self.num_classes = 2

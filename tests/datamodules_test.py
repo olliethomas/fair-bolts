@@ -33,3 +33,35 @@ def test_data_modules(dm_cls: Type[LightningDataModule]) -> None:
     F.cross_entropy(torch.rand((2, dm.num_classes)), batch.y)
     assert dm.num_classes
     assert dm.num_sens
+
+
+def test_cache_param() -> None:
+    """Test that the loader works with cache flag."""
+    dm = CelebaDataModule(cache_data=True)
+    dm.prepare_data()
+    dm.setup()
+    loader = dm.train_dataloader()
+    batch = next(iter(loader))
+    assert batch.x.size() == torch.Size([32, *dm.size()])
+    assert batch.s.size() == torch.Size([32])
+    assert batch.y.size() == torch.Size([32])
+    F.cross_entropy(torch.rand((32, dm.num_sens)), batch.s)
+    F.cross_entropy(torch.rand((32, dm.num_classes)), batch.y)
+    assert dm.num_classes
+    assert dm.num_sens
+
+
+def test_persist_param() -> None:
+    """Test that the loader works with persist_workers flag."""
+    dm = CelebaDataModule(persist_workers=True, num_workers=1)
+    dm.prepare_data()
+    dm.setup()
+    loader = dm.train_dataloader()
+    batch = next(iter(loader))
+    assert batch.x.size() == torch.Size([32, *dm.size()])
+    assert batch.s.size() == torch.Size([32])
+    assert batch.y.size() == torch.Size([32])
+    F.cross_entropy(torch.rand((32, dm.num_sens)), batch.s)
+    F.cross_entropy(torch.rand((32, dm.num_classes)), batch.y)
+    assert dm.num_classes
+    assert dm.num_sens

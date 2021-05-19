@@ -21,6 +21,7 @@ class VisionBaseDataModule(BaseDataModule):
         y_dim: int,
         s_dim: int,
         seed: int,
+        persist_workers: bool,
     ) -> None:
         super().__init__(
             batch_size=batch_size,
@@ -28,6 +29,7 @@ class VisionBaseDataModule(BaseDataModule):
             val_split=val_split,
             test_split=test_split,
             seed=seed,
+            persist_workers=persist_workers,
         )
         self.data_dir = data_dir if data_dir is not None else os.getcwd()
         self.y_dim = y_dim

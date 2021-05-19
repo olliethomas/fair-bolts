@@ -25,6 +25,7 @@ class TabularDataModule(BaseDataModule):
         batch_size: int = 32,
         seed: int = 0,
         scaler: ScalerType | None = None,
+        persist_workers: bool = False,
     ):
         """COMPAS Dataset Module.
 
@@ -35,6 +36,7 @@ class TabularDataModule(BaseDataModule):
             batch_size: How many samples per batch to load
             seed: RNG Seed
             scaler: SKLearn style data scaler. Fit to train, applied to val and test.
+            persist_workers: Use persistent workers in dataloader?
         """
         super().__init__(
             num_workers=num_workers,
@@ -42,6 +44,7 @@ class TabularDataModule(BaseDataModule):
             test_split=test_split,
             seed=seed,
             batch_size=batch_size,
+            persist_workers=persist_workers,
         )
         self.scaler = scaler if scaler is not None else StandardScaler()
 

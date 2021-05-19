@@ -33,6 +33,7 @@ class CmnistDataModule(VisionBaseDataModule):
         val_split: float = 0.2,
         test_split: float = 0.2,
         seed: int = 0,
+        persist_workers: bool = False,
     ):
         self.num_classes = max(label_map.values()) + 1 if label_map is not None else 10
         self.num_colours = num_colours
@@ -48,6 +49,7 @@ class CmnistDataModule(VisionBaseDataModule):
             y_dim=y_dim,
             s_dim=s_dim,
             seed=seed,
+            persist_workers=persist_workers,
         )
         self.dims = (3, 32, 32)
 
