@@ -34,6 +34,7 @@ class CelebaDataModule(VisionBaseDataModule):
     def __init__(
         self,
         data_dir: Optional[str] = None,
+        image_size: int = 64,
         batch_size: int = 32,
         num_workers: int = 0,
         val_split: float = 0.2,
@@ -52,7 +53,8 @@ class CelebaDataModule(VisionBaseDataModule):
             y_dim=1,
             seed=seed,
         )
-        self.dims = (3, 64, 64)
+        self.image_size = image_size
+        self.dims = (3, self.image_size, self.image_size)
         self.num_classes = 2
         self.num_sens = 2
         self.y_label = y_label
@@ -78,7 +80,7 @@ class CelebaDataModule(VisionBaseDataModule):
             check_integrity=True,
         )
 
-        tform_ls = [TF.Resize(64), TF.CenterCrop(64)]
+        tform_ls = [TF.Resize(self.image_size), TF.CenterCrop(self.image_size)]
         tform_ls.append(TF.ToTensor())
         tform_ls.append(TF.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)))
         transform = TF.Compose(tform_ls)
