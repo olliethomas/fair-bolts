@@ -8,7 +8,7 @@ include = ["fair_bolts/py.typed"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-lightning-bolts = "^0.3"
+lightning-bolts = {git = "https://github.com/PyTorchLightning/lightning-bolts.git", branch="master", allow-prereleases=true}
 pal-bolts = {git="https://github.com/predictive-analytics-lab/pal-bolts.git", branch="main"}
 torchvision = "^0.9"
 torch = "^1.8"
@@ -49,3 +49,35 @@ exclude = '''
                      # the root of the project
 )
 '''
+
+[tool.mypy]
+python_version = "3.8"
+no_implicit_optional = true
+allow_redefinition = true
+strict_equality = true
+check_untyped_defs = true
+warn_unreachable = true
+disallow_any_unimported = false
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+show_error_codes = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["ethicml.*", "torch.*"]
+follow_imports = "skip"
+follow_imports_for_stubs = true
+
+[[tool.mypy.overrides]]
+module = [
+    "flash.*",
+    "git.*",
+    "pal_bolts.*",
+    "pl_bolts.*",
+    "pytorch_lightning.*",
+    "scipy.*",
+    "torchvision.*",
+    "tqdm.*",
+    "wandb.*"
+]
+ignore_missing_imports = true
