@@ -4,8 +4,8 @@ from __future__ import annotations
 from abc import abstractmethod
 
 import ethicml as em
-from ethicml import implements
 from ethicml.preprocessing.scaling import ScalerType
+from kit import implements
 from pytorch_lightning import LightningDataModule
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset

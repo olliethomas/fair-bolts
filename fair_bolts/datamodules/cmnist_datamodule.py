@@ -5,8 +5,8 @@ from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import ethicml.vision as emvi
 import torch
-from ethicml import implements
 from ethicml.vision import LdColorizer, LdTransformation
+from kit import implements
 from pal_bolts.datasets.mnist_dataset import MNIST
 from pytorch_lightning import LightningDataModule
 from torch import Tensor

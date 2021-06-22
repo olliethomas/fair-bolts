@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 
 import pytorch_lightning as pl
-from ethicml import implements
+from kit import implements
 from torch.utils.data import DataLoader, Dataset
 
 

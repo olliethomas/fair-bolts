@@ -5,7 +5,6 @@ from typing import Any, Optional
 import ethicml as em
 import ethicml.vision as emvi
 import torch
-from ethicml import implements
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import Dataset
 from torch.utils.data.dataset import T_co, random_split

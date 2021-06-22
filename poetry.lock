@@ -374,7 +374,7 @@ python-versions = ">=3.6"
 
 [[package]]
 name = "lightning-bolts"
-version = "0.4.0.dev0"
+version = "0.3.4"
 description = "PyTorch Lightning Bolts is a community contribution for ML researchers."
 category = "main"
 optional = false
@@ -397,7 +397,7 @@ test = ["codecov (>=2.1)", "pytest (>=6.0)", "pytest-cov (>2.10)", "flake8", "ch
 type = "git"
 url = "https://github.com/PyTorchLightning/lightning-bolts.git"
 reference = "master"
-resolved_reference = "40b6f78881731eb82b6afe64e56d3f9b8dc940dc"
+resolved_reference = "354534ae424d61238a599317c8c6fe900f5d3d51"
 
 [[package]]
 name = "markdown"
@@ -1113,7 +1113,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "085804330a0f66422588333aef93f425f284cfcd8aa1ca74c4e96eaf01139362"
+content-hash = "8e5f43e1ffde1267fc7d253cd800f4cd4a4e5b17f17cce8009c75380bc784f0f"
 
 [metadata.files]
 absl-py = [

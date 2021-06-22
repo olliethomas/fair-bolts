@@ -13,6 +13,7 @@ pal-bolts = {git="https://github.com/predictive-analytics-lab/pal-bolts.git", br
 torchvision = "^0.9"
 torch = "^1.8"
 EthicML = "^0.2.3"
+palkit = "^0.1.10"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
@@ -64,7 +65,7 @@ show_error_codes = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = ["ethicml.*", "torch.*"]
+module = ["ethicml.*", "kit.*", "torch.*"]
 follow_imports = "skip"
 follow_imports_for_stubs = true
 
