@@ -2,7 +2,7 @@
 from typing import Any
 
 import torch
-from pytorch_lightning.metrics import Accuracy
+from torchmetrics import Accuracy
 
 
 class AccuracyPerSens(Accuracy):

@@ -1,6 +1,6 @@
 """Accuracy that accepts sens label."""
 import torch
-from pytorch_lightning.metrics import Accuracy
+from torchmetrics import Accuracy
 
 
 class FbAccuracy(Accuracy):
