@@ -10,10 +10,10 @@ include = ["fair_bolts/py.typed"]
 python = "^3.7"
 lightning-bolts = {git = "https://github.com/PyTorchLightning/lightning-bolts.git", branch="master", allow-prereleases=true}
 pal-bolts = {git="https://github.com/predictive-analytics-lab/pal-bolts.git", branch="main"}
-torchvision = "^0.9"
-torch = "^1.8"
-EthicML = "^0.2.3"
-palkit = "^0.1.10"
+torchvision = "*"
+torch = "*"
+EthicML = "*"
+palkit = "*"
 
 [tool.poetry.dev-dependencies]
 black = "^20.8b1"
