@@ -83,27 +83,29 @@ class Laftr(pl.LightningModule):
 
     def _adv_loss(self, s_pred: Tensor, batch: DataBatch) -> Tensor:
         # For Demographic Parity, for EqOpp is a different loss term.
+        s_target = batch.s.unsqueeze(-1) if len(batch.s.shape) == 1 else batch.s
+        y_target = batch.y.unsqueeze(-1) if len(batch.y.shape) == 1 else batch.y
         if self.fairness is FairnessType.DP:
-            s0 = self._adv_clf_loss(s_pred[batch.s == 0], batch.s[batch.s == 0])
-            s1 = self._adv_clf_loss(s_pred[batch.s == 1], batch.s[batch.s == 1])
+            s0 = self._adv_clf_loss(s_pred[batch.s == 0], s_target[batch.s == 0])
+            s1 = self._adv_clf_loss(s_pred[batch.s == 1], s_target[batch.s == 1])
             loss = (s0 + s1) / 2
         elif self.fairness is FairnessType.EO:
             loss = torch.tensor(0.0).to(self.device)
             for s, y in itertools.product([0, 1], repeat=2):
-                if len(batch.s[(batch.s == s) & (batch.y == y)]) > 0:
+                if len(batch.s[(batch.s == s) & (y_target == y)]) > 0:
                     loss += self._adv_clf_loss(
-                        s_pred[(batch.s == s) & (batch.y == y)],
-                        batch.s[(batch.s == s) & (batch.y == y)],
+                        s_pred[(s_target == s) & (y_target == y)],
+                        batch.s[(s_target == s) & (y_target == y)],
                     )
             loss = 2 - loss
         elif self.fairness is FairnessType.EqOp:
             # TODO: How to best handle this if no +ve samples in the batch?
             loss = torch.tensor(0.0).to(self.device)
             for s in (0, 1):
-                if len(batch.s[(batch.s == s) & (batch.y == 1)]) > 0:
+                if len(batch.s[(s_target == s) & (y_target == 1)]) > 0:
                     loss += self._adv_clf_loss(
-                        s_pred[(batch.s == s) & (batch.y == 1)],
-                        batch.s[(batch.s == s) & (batch.y == 1)],
+                        s_pred[(s_target == s) & (y_target == 1)],
+                        batch.s[(s_target == s) & (y_target == 1)],
                     )
             loss = 2 - loss
         else:
