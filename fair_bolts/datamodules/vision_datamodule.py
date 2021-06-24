@@ -22,6 +22,7 @@ class VisionBaseDataModule(BaseDataModule):
         s_dim: int,
         seed: int,
         persist_workers: bool,
+        pin_memory: bool,
     ) -> None:
         super().__init__(
             batch_size=batch_size,
@@ -30,6 +31,7 @@ class VisionBaseDataModule(BaseDataModule):
             test_split=test_split,
             seed=seed,
             persist_workers=persist_workers,
+            pin_memory=pin_memory,
         )
         self.data_dir = data_dir if data_dir is not None else os.getcwd()
         self.y_dim = y_dim

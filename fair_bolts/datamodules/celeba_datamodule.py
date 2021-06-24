@@ -45,6 +45,7 @@ class CelebaDataModule(VisionBaseDataModule):
         seed: int = 0,
         persist_workers: bool = False,
         cache_data: bool = False,
+        pin_memory: bool = True,
     ):
         super().__init__(
             data_dir=data_dir,
@@ -56,6 +57,7 @@ class CelebaDataModule(VisionBaseDataModule):
             y_dim=1,
             seed=seed,
             persist_workers=persist_workers,
+            pin_memory=pin_memory,
         )
         self.image_size = image_size
         self.dims = (3, self.image_size, self.image_size)

@@ -19,6 +19,7 @@ class BaseDataModule(pl.LightningDataModule):
         num_workers: int,
         seed: int,
         persist_workers: bool,
+        pin_memory: bool,
     ):
         super().__init__()
         self.batch_size = batch_size
@@ -27,6 +28,7 @@ class BaseDataModule(pl.LightningDataModule):
         self.test_split = test_split
         self.seed = seed
         self.persist_workers = persist_workers
+        self.pin_memory = pin_memory
 
     @staticmethod
     def _get_splits(train_len: int, val_split: int | float) -> list[int]:
@@ -52,7 +54,7 @@ class BaseDataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             shuffle=shuffle,
             num_workers=self.num_workers,
-            pin_memory=True,
+            pin_memory=self.pin_memory,
             drop_last=drop_last,
             persistent_workers=self.persist_workers,
         )
