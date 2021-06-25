@@ -3,14 +3,16 @@ from collections import namedtuple
 from itertools import groupby
 from typing import Iterator, List, Tuple
 
+import ethicml as em
 import numpy as np
+import pandas as pd
 import torch
 from ethicml import DataTuple
 from ethicml.implementations.pytorch_common import _get_info
 from torch import Tensor
 from torch.utils.data import Dataset
 
-DataBatch = namedtuple("DataBatch", ["x", "s", "y"])
+DataBatch = namedtuple("DataBatch", ["x", "s", "y", "iw"])
 
 
 def group_features(disc_feats: List[str]) -> Iterator[Tuple[str, Iterator[str]]]:
@@ -70,6 +72,15 @@ class DataTupleDatasetBase(Dataset):
         self.ydim = dataset.y.shape[1]
         self.y_names = dataset.y.columns
 
+        dt = em.DataTuple(
+            x=pd.DataFrame(
+                np.random.randint(0, len(self.s), size=(len(self.s), 1)), columns=list("x")
+            ),
+            s=pd.DataFrame(self.s, columns=["s"]),
+            y=pd.DataFrame(self.y, columns=["y"]),
+        )
+        self.iws = torch.tensor(em.compute_instance_weights(dt)["instance weights"].values)
+
     def __len__(self) -> int:
         return self.s.shape[0]
 
@@ -90,6 +101,10 @@ class DataTupleDatasetBase(Dataset):
         y = self.y[index]
         return torch.from_numpy(y).squeeze().long()
 
+    def _iw(self, index: int) -> Tensor:
+        iw = self.iws[index]
+        return iw.squeeze().float()
+
 
 class DataTupleDataset(DataTupleDatasetBase):
     """Wrapper for EthicML datasets."""
@@ -97,5 +112,10 @@ class DataTupleDataset(DataTupleDatasetBase):
     def __init__(self, dataset: DataTuple, disc_features: List[str], cont_features: List[str]):
         super().__init__(dataset, disc_features, cont_features)
 
-    def __getitem__(self, index: int) -> Tuple[Tensor, Tensor, Tensor]:
-        return DataBatch(x=self._x(index), s=self._s(index), y=self._y(index))
+    def __getitem__(self, index: int) -> DataBatch:
+        return DataBatch(
+            x=self._x(index),
+            s=self._s(index).unsqueeze(-1),
+            y=self._y(index).unsqueeze(-1),
+            iw=self._iw(index).unsqueeze(-1),
+        )

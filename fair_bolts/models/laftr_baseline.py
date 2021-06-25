@@ -10,7 +10,6 @@ import pytorch_lightning as pl
 import torch
 import torchmetrics
 from kit import implements
-from pl_bolts.datamodules.vision_datamodule import VisionDataModule
 from torch import Tensor, nn, optim
 
 __all__ = ["Laftr"]
@@ -70,9 +69,6 @@ class Laftr(pl.LightningModule):
 
         self._target_name: str = "y"
 
-    def build(self, datamodule: VisionDataModule, trainer: pl.Trainer) -> None:
-        """DM and Trainer not needed."""
-
     @property
     def target(self) -> str:
         return self._target_name
@@ -80,54 +76,6 @@ class Laftr(pl.LightningModule):
     @target.setter
     def target(self, target: str) -> None:
         self._target_name = target
-
-    def _adv_loss(self, s_pred: Tensor, batch: DataBatch) -> Tensor:
-        # For Demographic Parity, for EqOpp is a different loss term.
-        s_target = batch.s.unsqueeze(-1) if len(batch.s.shape) == 1 else batch.s
-        y_target = batch.y.unsqueeze(-1) if len(batch.y.shape) == 1 else batch.y
-        if self.fairness is FairnessType.DP:
-            s0 = self._adv_clf_loss(s_pred[batch.s == 0], s_target[batch.s == 0])
-            s1 = self._adv_clf_loss(s_pred[batch.s == 1], s_target[batch.s == 1])
-            loss = (s0 + s1) / 2
-        elif self.fairness is FairnessType.EO:
-            loss = torch.tensor(0.0).to(self.device)
-            for s, y in itertools.product([0, 1], repeat=2):
-                if len(batch.s[(batch.s == s) & (y_target == y)]) > 0:
-                    loss += self._adv_clf_loss(
-                        s_pred[(s_target == s) & (y_target == y)],
-                        batch.s[(s_target == s) & (y_target == y)],
-                    )
-            loss = 2 - loss
-        elif self.fairness is FairnessType.EqOp:
-            # TODO: How to best handle this if no +ve samples in the batch?
-            loss = torch.tensor(0.0).to(self.device)
-            for s in (0, 1):
-                if len(batch.s[(s_target == s) & (y_target == 1)]) > 0:
-                    loss += self._adv_clf_loss(
-                        s_pred[(s_target == s) & (y_target == 1)],
-                        batch.s[(s_target == s) & (y_target == 1)],
-                    )
-            loss = 2 - loss
-        else:
-            raise RuntimeError("Only DP and EO fairness accepted.")
-        return self.adv_weight * loss
-
-    def _inference_step(self, batch: DataBatch, stage: str) -> Dict[str, Tensor]:
-        model_out = self(batch.x, batch.s)
-        laftr_loss = self._laftr_loss(model_out.y, model_out.x, batch)
-        adv_loss = self._adv_loss(model_out.s, batch)
-        tm_acc = self.val_acc if stage == "val" else self.train_acc
-        target = batch.y.long() if len(batch.y.shape) == 2 else batch.y.unsqueeze(-1).long()
-        acc = tm_acc(model_out.y >= 0, target)
-        self.log_dict(
-            {
-                f"{stage}/loss": (laftr_loss + adv_loss).item(),
-                f"{stage}/model_loss": laftr_loss.item(),
-                f"{stage}/adv_loss": adv_loss.item(),
-                f"{stage}/{self.target}_acc": acc,
-            }
-        )
-        return {"y": batch.y, "s": batch.s, "preds": model_out.y.sigmoid().round().squeeze(-1)}
 
     def _inference_epoch_end(self, output_results: List[Dict[str, Tensor]], stage: str) -> None:
         all_y = torch.cat([_r["y"] for _r in output_results], 0)
@@ -156,10 +104,62 @@ class Laftr(pl.LightningModule):
 
         self.log_dict(results_dict)
 
-    def _laftr_loss(self, y_pred: Tensor, recon: Tensor, batch: DataBatch) -> Tensor:
+    def _inference_step(self, batch: DataBatch, stage: str) -> Dict[str, Tensor]:
+        model_out = self(batch.x, batch.s)
+        laftr_loss = self._loss_laftr(model_out.y, model_out.x, batch)
+        adv_loss = self._loss_adv(model_out.s, batch)
+        tm_acc = self.val_acc if stage == "val" else self.train_acc
+        target = batch.y.long() if len(batch.y.shape) == 2 else batch.y.unsqueeze(-1).long()
+        acc = tm_acc(model_out.y >= 0, target)
+        self.log_dict(
+            {
+                f"{stage}/loss": (laftr_loss + adv_loss).item(),
+                f"{stage}/model_loss": laftr_loss.item(),
+                f"{stage}/adv_loss": adv_loss.item(),
+                f"{stage}/{self.target}_acc": acc,
+            }
+        )
+        return {"y": batch.y, "s": batch.s, "preds": model_out.y.sigmoid().round().squeeze(-1)}
+
+    def _loss_adv(self, s_pred: Tensor, batch: DataBatch) -> Tensor:
+        # For Demographic Parity, for EqOpp is a different loss term.
+        s_target = batch.s.unsqueeze(-1) if len(batch.s.shape) == 1 else batch.s
+        y_target = batch.y.unsqueeze(-1) if len(batch.y.shape) == 1 else batch.y
+        if self.fairness is FairnessType.DP:
+            s0 = self._adv_clf_loss(s_pred[batch.s == 0], s_target[batch.s == 0])
+            s1 = self._adv_clf_loss(s_pred[batch.s == 1], s_target[batch.s == 1])
+            loss = (s0 + s1) / 2
+        elif self.fairness is FairnessType.EO:
+            loss = torch.tensor(0.0).to(self.device)
+            for s, y in itertools.product([0, 1], repeat=2):
+                if len(batch.s[(batch.s == s) & (y_target == y)]) > 0:
+                    loss += self._adv_clf_loss(
+                        s_pred[(s_target == s) & (y_target == y)],
+                        batch.s[(s_target == s) & (y_target == y)],
+                    )
+            loss = 2 - loss
+        elif self.fairness is FairnessType.EqOp:
+            # TODO: How to best handle this if no +ve samples in the batch?
+            loss = torch.tensor(0.0).to(self.device)
+            for s in (0, 1):
+                if len(batch.s[(s_target == s) & (y_target == 1)]) > 0:
+                    loss += self._adv_clf_loss(
+                        s_pred[(s_target == s) & (y_target == 1)],
+                        batch.s[(s_target == s) & (y_target == 1)],
+                    )
+            loss = 2 - loss
+        else:
+            raise RuntimeError("Only DP and EO fairness accepted.")
+        self.log(f"{self.fairness}_adv_loss", self.adv_weight * loss)
+        return self.adv_weight * loss
+
+    def _loss_laftr(self, y_pred: Tensor, recon: Tensor, batch: DataBatch) -> Tensor:
         target = batch.y.float() if len(batch.y.shape) == 2 else batch.y.unsqueeze(-1).float()
         clf_loss = self._clf_loss(y_pred, target)
         recon_loss = self._recon_loss(recon, batch.x)
+        self.log_dict(
+            {"clf_loss": self.clf_weight * clf_loss, "recon_loss": self.recon_weight * recon_loss}
+        )
         return self.clf_weight * clf_loss + self.recon_weight * recon_loss
 
     @implements(pl.LightningModule)
@@ -193,12 +193,12 @@ class Laftr(pl.LightningModule):
             optimizer.step(closure=optimizer_closure)
 
     @implements(pl.LightningModule)
-    def test_step(self, batch: DataBatch, batch_idx: int) -> Dict[str, Tensor]:
-        return self._inference_step(batch=batch, stage="test")
-
-    @implements(pl.LightningModule)
     def test_epoch_end(self, output_results: List[Dict[str, Tensor]]) -> None:
         self._inference_epoch_end(output_results=output_results, stage="test")
+
+    @implements(pl.LightningModule)
+    def test_step(self, batch: DataBatch, batch_idx: int) -> Dict[str, Tensor]:
+        return self._inference_step(batch=batch, stage="test")
 
     @implements(pl.LightningModule)
     def training_step(self, batch: DataBatch, batch_idx: int, optimizer_idx: int) -> Tensor:
@@ -206,8 +206,8 @@ class Laftr(pl.LightningModule):
             # Main model update
             self.set_requires_grad(self.adv, requires_grad=False)
             model_out = self(batch.x, batch.s)
-            laftr_loss = self._laftr_loss(model_out.y, model_out.x, batch)
-            adv_loss = self._adv_loss(model_out.s, batch)
+            laftr_loss = self._loss_laftr(model_out.y, model_out.x, batch)
+            adv_loss = self._loss_adv(model_out.s, batch)
             target = batch.y.long() if len(batch.y.shape) == 2 else batch.y.unsqueeze(-1).long()
             acc = self.train_acc(model_out.y >= 0, target)
             self.log_dict(
@@ -223,8 +223,8 @@ class Laftr(pl.LightningModule):
             self.set_requires_grad([self.enc, self.dec, self.clf], requires_grad=False)
             self.set_requires_grad(self.adv, requires_grad=True)
             model_out = self(batch.x, batch.s)
-            adv_loss = self._adv_loss(model_out.s, batch)
-            laftr_loss = self._laftr_loss(model_out.y, model_out.x, batch)
+            adv_loss = self._loss_adv(model_out.s, batch)
+            laftr_loss = self._loss_laftr(model_out.y, model_out.x, batch)
             target = batch.y.long() if len(batch.y.shape) == 2 else batch.y.unsqueeze(-1).long()
             acc = self.train_acc(model_out.y >= 0, target)
             self.log_dict(
@@ -239,12 +239,12 @@ class Laftr(pl.LightningModule):
             raise RuntimeError("There should only be 2 optimizers, but 3rd received.")
 
     @implements(pl.LightningModule)
-    def validation_step(self, batch: DataBatch, batch_idx: int) -> Dict[str, Tensor]:
-        return self._inference_step(batch=batch, stage="val")
-
-    @implements(pl.LightningModule)
     def validation_epoch_end(self, output_results: List[Dict[str, Tensor]]) -> None:
         self._inference_epoch_end(output_results=output_results, stage="val")
+
+    @implements(pl.LightningModule)
+    def validation_step(self, batch: DataBatch, batch_idx: int) -> Dict[str, Tensor]:
+        return self._inference_step(batch=batch, stage="val")
 
     @implements(nn.Module)
     def forward(self, x: Tensor, s: Tensor) -> ModelOut:

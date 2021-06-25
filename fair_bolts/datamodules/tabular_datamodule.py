@@ -1,7 +1,6 @@
 """This is where the inevitable common DataModule will live."""
-from __future__ import annotations
-
 from abc import abstractmethod
+from typing import Optional, Union
 
 import ethicml as em
 from ethicml.preprocessing.scaling import ScalerType
@@ -19,13 +18,16 @@ class TabularDataModule(BaseDataModule):
 
     def __init__(
         self,
-        val_split: float | int = 0.2,
-        test_split: float | int = 0.2,
+        val_split: Union[float, int] = 0.2,
+        test_split: Union[float, int] = 0.2,
         num_workers: int = 0,
         batch_size: int = 32,
         seed: int = 0,
-        scaler: ScalerType | None = None,
+        scaler: Optional[ScalerType] = None,
         persist_workers: bool = False,
+        pin_memory: bool = True,
+        stratified_sampling: bool = False,
+        sample_with_replacement: bool = False,
     ):
         """COMPAS Dataset Module.
 
@@ -37,6 +39,9 @@ class TabularDataModule(BaseDataModule):
             seed: RNG Seed
             scaler: SKLearn style data scaler. Fit to train, applied to val and test.
             persist_workers: Use persistent workers in dataloader?
+            pin_memory: Should the memory be pinned?
+            stratified_sampling: Use startified sampling?
+            sample_with_replacement: If using stratified sampling, should the samples be unique?
         """
         super().__init__(
             num_workers=num_workers,
@@ -45,6 +50,9 @@ class TabularDataModule(BaseDataModule):
             seed=seed,
             batch_size=batch_size,
             persist_workers=persist_workers,
+            pin_memory=pin_memory,
+            stratified_sampling=stratified_sampling,
+            sample_with_replacement=sample_with_replacement,
         )
         self.scaler = scaler if scaler is not None else StandardScaler()
 
@@ -60,7 +68,7 @@ class TabularDataModule(BaseDataModule):
         )
 
     @implements(LightningDataModule)
-    def setup(self, stage: str | None = None) -> None:
+    def setup(self, stage: Optional[str] = None) -> None:
         self.datatuple = self.em_dataset.load(ordered=True)
 
         data_len = int(self.datatuple.x.shape[0])

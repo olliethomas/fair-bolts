@@ -7,26 +7,11 @@ import ethicml.vision as emvi
 import torch
 from kit import implements
 from pytorch_lightning import LightningDataModule
-from torch.utils.data import Dataset
-from torch.utils.data.dataset import T_co, random_split
+from torch.utils.data.dataset import random_split
 from torchvision import transforms as TF
 
 from fair_bolts.datamodules.vision_datamodule import VisionBaseDataModule
-from fair_bolts.datasets.ethicml_datasets import DataBatch
-
-
-class TiWrapper(Dataset):
-    """Wrapper for a Torch Image Datasets."""
-
-    def __init__(self, ti: emvi.TorchImageDataset):
-        self.ti = ti
-
-    def __getitem__(self, index: int) -> T_co:
-        x, s, y = self.ti[index]
-        return DataBatch(x=x, s=s.squeeze(), y=y.squeeze())
-
-    def __len__(self) -> int:
-        return len(self.ti)
+from fair_bolts.datamodules.wrappers import TiWrapper
 
 
 class CelebaDataModule(VisionBaseDataModule):
@@ -46,6 +31,8 @@ class CelebaDataModule(VisionBaseDataModule):
         persist_workers: bool = False,
         cache_data: bool = False,
         pin_memory: bool = True,
+        stratified_sampling: bool = False,
+        sample_with_replacement: bool = False,
     ):
         super().__init__(
             data_dir=data_dir,
@@ -58,6 +45,8 @@ class CelebaDataModule(VisionBaseDataModule):
             seed=seed,
             persist_workers=persist_workers,
             pin_memory=pin_memory,
+            stratified_sampling=stratified_sampling,
+            sample_with_replacement=sample_with_replacement,
         )
         self.image_size = image_size
         self.dims = (3, self.image_size, self.image_size)
@@ -100,7 +89,7 @@ class CelebaDataModule(VisionBaseDataModule):
         )
 
         if self.cache_data:
-            all_data.__getitem__ = lru_cache(None)(all_data.__getitem__)
+            all_data.__getitem__ = lru_cache(None)(all_data.__getitem__)  # type: ignore[assignment]
 
         num_train_val, num_test = self._get_splits(int(len(all_data)), self.test_split)
         num_train, num_val = self._get_splits(num_train_val, self.val_split)

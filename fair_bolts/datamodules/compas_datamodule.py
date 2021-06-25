@@ -19,6 +19,8 @@ class CompasDataModule(TabularDataModule):
         scaler: Optional[ScalerType] = None,
         seed: int = 0,
         persist_workers: bool = False,
+        stratified_sampling: bool = False,
+        sample_with_replacement: bool = False,
     ):
         super().__init__(
             batch_size=batch_size,
@@ -28,6 +30,8 @@ class CompasDataModule(TabularDataModule):
             test_split=test_split,
             val_split=val_split,
             persist_workers=persist_workers,
+            stratified_sampling=stratified_sampling,
+            sample_with_replacement=sample_with_replacement,
         )
         self._em_dataset = em.compas(split="Sex")
         self.num_classes = 2

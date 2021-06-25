@@ -1,9 +1,9 @@
 """Colorised MNIST datamodule."""
-from __future__ import annotations
 
 from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 import ethicml.vision as emvi
+import numpy as np
 import torch
 from ethicml.vision import LdColorizer, LdTransformation
 from kit import implements
@@ -34,6 +34,9 @@ class CmnistDataModule(VisionBaseDataModule):
         test_split: float = 0.2,
         seed: int = 0,
         persist_workers: bool = False,
+        pin_memory: bool = True,
+        stratified_sampling: bool = False,
+        sample_with_replacement: bool = False,
     ):
         self.num_classes = max(label_map.values()) + 1 if label_map is not None else 10
         self.num_colours = num_colours
@@ -50,6 +53,9 @@ class CmnistDataModule(VisionBaseDataModule):
             s_dim=s_dim,
             seed=seed,
             persist_workers=persist_workers,
+            pin_memory=pin_memory,
+            stratified_sampling=stratified_sampling,
+            sample_with_replacement=sample_with_replacement,
         )
         self.dims = (3, 32, 32)
 
@@ -168,7 +174,7 @@ class LdAugmentedDataset(Dataset):
         return len(self.dataset)
 
     @staticmethod
-    def _validate_dataset(dataset: Dataset | DataLoader) -> Dataset:
+    def _validate_dataset(dataset: Union[Dataset, DataLoader]) -> Dataset:
         if isinstance(dataset, DataLoader):
             dataset = dataset.dataset
         elif not isinstance(dataset, Dataset):
@@ -227,7 +233,5 @@ class LdAugmentedDataset(Dataset):
         if x.dim() == 4 and x.size(1) == 1:
             x = x.repeat(1, 3, 1, 1)
         x = x.squeeze(0)
-        s = s.squeeze()  # type: ignore[attr-defined]
-        y = y.squeeze()  # type: ignore[attr-defined]
 
-        return DataBatch(x=x, s=s, y=y)
+        return DataBatch(x=x, s=s, y=y, iw=torch.tensor(np.NaN))

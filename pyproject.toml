@@ -14,14 +14,15 @@ torchvision = "*"
 torch = "*"
 EthicML = "*"
 palkit = "*"
+albumentations = "^1.0.0"
 
 [tool.poetry.dev-dependencies]
-black = "^20.8b1"
-isort = "^5.7.0"
-pydocstyle = "^5.1.1"
-pre-commit = "^2.10.1"
-pytest = "^6.2.2"
-mypy = "^0.812"
+black = "*"
+isort = "*"
+pydocstyle = "*"
+pre-commit = "*"
+pytest = "*"
+mypy = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -65,18 +66,26 @@ show_error_codes = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = ["ethicml.*", "kit.*", "torch.*"]
+module = ["ethicml.*", "kit.*", "pytest.*", "pytorch_lightning.*", "torch.*", "torchmetrics.*"]
 follow_imports = "skip"
 follow_imports_for_stubs = true
 
 [[tool.mypy.overrides]]
 module = [
+    "albumentations.*",
+    "ethicml.*",
     "flash.*",
     "git.*",
+    "kit.*",
     "pal_bolts.*",
+    "pandas.*",
+    "PIL.*",
     "pl_bolts.*",
+    "pytest.*",
     "pytorch_lightning.*",
     "scipy.*",
+    "sklearn.*",
+    "torchmetrics.*",
     "torchvision.*",
     "tqdm.*",
     "wandb.*"
